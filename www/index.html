@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDI Keyboard Web App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #f1f1f1;
+            min-height: 100vh;
+            padding: 20px;
+            touch-action: manipulation;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-connected {
+            background-color: #4CAF50;
+            box-shadow: 0 0 10px #4CAF50;
+        }
+        
+        .status-disconnected {
+            background-color: #f44336;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .keyboard-section {
+            flex: 2;
+            min-width: 300px;
+        }
+        
+        .controls-section {
+            flex: 1;
+            min-width: 250px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(106, 17, 203, 0.5);
+        }
+        
+        .keyboard-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x;
+        }
+        
+        .keyboard {
+            display: flex;
+            position: relative;
+            height: 200px;
+            user-select: none;
+            margin: 0 auto;
+            width: fit-content;
+            min-width: 500px;
+            touch-action: manipulation;
+        }
+        
+        .white-key {
+            width: 50px;
+            height: 100%;
+            background: linear-gradient(to bottom, #fff 0%, #f8f8f8 100%);
+            border: 1px solid #ccc;
+            border-radius: 0 0 5px 5px;
+            margin-right: -1px;
+            position: relative;
+            cursor: pointer;
+            z-index: 1;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.1s;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .white-key.active {
+            background: linear-gradient(to bottom, #ffcc00 0%, #ff9900 100%);
+            transform: translateY(5px);
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .black-key {
+            width: 30px;
+            height: 60%;
+            background: linear-gradient(to bottom, #333 0%, #000 100%);
+            border-radius: 0 0 5px 5px;
+            position: absolute;
+            z-index: 2;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: all 0.1s;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .black-key.active {
+            background: linear-gradient(to bottom, #ff6600 0%, #cc3300 100%);
+            transform: translateY(5px);
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.4);
+        }
+        
+        .keyboard-note {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            color: #333;
+            font-weight: bold;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+        
+        .black-key .keyboard-note {
+            color: #ccc;
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        .control-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        select, input[type="range"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 1rem;
+        }
+        
+        input[type="range"] {
+            padding: 0;
+            height: 8px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #6a11cb;
+            cursor: pointer;
+        }
+        
+        .value-display {
+            text-align: right;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 10px;
+            touch-action: manipulation;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(106, 17, 203, 0.4);
+        }
+        
+        .button:active {
+            transform: translateY(0);
+        }
+        
+        .midi-devices {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .device-item {
+            padding: 8px;
+            margin-bottom: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            touch-action: manipulation;
+        }
+        
+        .device-item:hover {
+            background: rgba(106, 17, 203, 0.2);
+        }
+        
+        .device-item.active {
+            background: rgba(106, 17, 203, 0.4);
+            border-left: 3px solid #6a11cb;
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            border-left: 4px solid #2575fc;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #6a11cb;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            line-height: 1.6;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .octave-control {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .octave-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+        
+        .octave-display {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        
+        .mobile-warning {
+            background: rgba(255, 193, 7, 0.2);
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .keyboard {
+                height: 180px;
+                min-width: 100%;
+                transform-origin: left top;
+            }
+            
+            .white-key {
+                width: 14.28%;
+                min-width: 40px;
+            }
+            
+            .black-key {
+                width: 8.4%;
+                min-width: 25px;
+            }
+            
+            .keyboard-note {
+                font-size: 0.7rem;
+            }
+            
+            .mobile-warning {
+                display: block;
+            }
+            
+            .controls-section {
+                order: -1;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .keyboard {
+                height: 150px;
+            }
+            
+            .white-key {
+                min-width: 35px;
+            }
+            
+            .black-key {
+                min-width: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+        }
+        
+        .audio-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .audio-start-button {
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: transform 0.2s;
+        }
+        
+        .audio-start-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .audio-overlay-content {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 500px;
+        }
+    </style>
+</head>
+<body>
+    <div id="audio-overlay" class="audio-overlay">
+        <div class="audio-overlay-content">
+            <h2><i class="fas fa-keyboard"></i> MIDI Keyboard Web App</h2>
+            <p>Click the button below to start the audio engine.</p>
+            <p><small>Modern browsers require user interaction before playing audio.</small></p>
+            <button id="start-audio" class="audio-start-button">
+                <i class="fas fa-play"></i> Start Audio Engine
+            </button>
+        </div>
+    </div>
+
+    <div class="container" style="display:none;" id="main-content">
+        <header>
+            <h1><i class="fas fa-keyboard"></i> Web MIDI Keyboard</h1>
+            <p class="subtitle">A browser-based MIDI keyboard with virtual piano and external MIDI device support</p>
+            <p id="midi-status">
+                <span class="status-indicator status-disconnected" id="status-indicator"></span>
+                <span id="status-text">MIDI API: Checking...</span>
+            </p>
+        </header>
+        
+        <div class="mobile-warning">
+            <i class="fas fa-mobile-alt"></i> <strong>Mobile Mode:</strong> Touch the keys to play. Swipe horizontally to see all keys.
+        </div>
+        
+        <div class="main-content">
+            <section class="keyboard-section">
+                <h2 class="section-title">Virtual Keyboard</h2>
+                <div class="keyboard-container">
+                    <div class="keyboard" id="keyboard"></div>
+                </div>
+                
+                <div class="octave-control">
+                    <button class="octave-btn" id="octave-down"><i class="fas fa-minus"></i></button>
+                    <div class="octave-display">Octave: <span id="octave-value">4</span></div>
+                    <button class="octave-btn" id="octave-up"><i class="fas fa-plus"></i></button>
+                </div>
+            </section>
+            
+            <section class="controls-section">
+                <h2 class="section-title">Controls</h2>
+                
+                <div class="control-group">
+                    <label class="control-label">Instrument Type</label>
+                    <select id="instrument-select">
+                        <option value="synth">Basic Synth</option>
+                        <option value="am">AM Synth</option>
+                        <option value="fm">FM Synth</option>
+                        <option value="duo">Duo Synth</option>
+                        <option value="membrane">Membrane Synth</option>
+                        <option value="metal">Metal Synth</option>
+                        <option value="pluck">Pluck Synth</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Volume: <span id="volume-value">-12</span> dB</label>
+                    <input type="range" id="volume-slider" min="-60" max="0" step="1" value="-12">
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Reverb: <span id="reverb-value">0.3</span></label>
+                    <input type="range" id="reverb-slider" min="0" max="1" step="0.01" value="0.3">
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Sustain: <span id="sustain-value">0.5</span>s</label>
+                    <input type="range" id="sustain-slider" min="0.1" max="2" step="0.1" value="0.5">
+                </div>
+                
+                <button class="button" id="connect-midi">
+                    <i class="fas fa-plug"></i> Connect MIDI Device
+                </button>
+                
+                <button class="button" id="test-sound">
+                    <i class="fas fa-music"></i> Test Sound
+                </button>
+                
+                <div class="midi-devices" id="midi-devices">
+                    <p>No MIDI devices connected. Click "Connect MIDI Device" above.</p>
+                </div>
+            </section>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Use:</h3>
+            <ul>
+                <li><strong>Click/Tap</strong> on the piano keys to play notes</li>
+                <li><strong>On mobile:</strong> Touch and hold keys to sustain notes</li>
+                <li><strong>Use your computer keyboard</strong>: Keys A-K for white keys, W-E-T-Y-U for black keys</li>
+                <li><strong>Connect a physical MIDI keyboard</strong> using the "Connect MIDI Device" button</li>
+                <li>Change the instrument type, volume, and effects using the controls on the right</li>
+                <li>Adjust the octave using the + and - buttons below the keyboard</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Global audio state
+        let audioStarted = false;
+        let midiKeyboard = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show audio overlay first
+            const audioOverlay = document.getElementById('audio-overlay');
+            const mainContent = document.getElementById('main-content');
+            
+            audioOverlay.style.display = 'flex';
+            mainContent.style.display = 'none';
+            
+            // Audio startup button
+            document.getElementById('start-audio').addEventListener('click', async function() {
+                try {
+                    // Start Tone.js audio context
+                    await Tone.start();
+                    console.log('Tone.js started');
+                    
+                    // Wait for context to be running
+                    while (Tone.context.state !== 'running') {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                    console.log('Audio context is running');
+                    
+                    // Play a quick test sound to verify audio works
+                    const testSynth = new Tone.Synth().toDestination();
+                    testSynth.triggerAttackRelease("C4", "8n");
+                    
+                    audioStarted = true;
+                    
+                    // Hide overlay and show main content
+                    audioOverlay.style.display = 'none';
+                    mainContent.style.display = 'block';
+                    
+                    // Initialize the MIDI keyboard
+                    midiKeyboard = new MidiKeyboard();
+                    
+                } catch (error) {
+                    console.error('Failed to start audio:', error);
+                    alert('Audio failed to start. Please refresh and try again.');
+                }
+            });
+
+            class MidiKeyboard {
+                constructor() {
+                    // Audio components
+                    this.reverb = null;
+                    this.volume = null;
+                    this.synth = null;
+                    this.currentInstrument = 'synth';
+                    this.polyphony = 8;
+                    this.sustainTime = 0.5;
+                    this.audioStarted = true; // AudioContext já foi iniciado antes de criar esta classe
+                    
+                    // Keyboard state
+                    this.octave = 4;
+                    this.activeNotes = new Set();
+                    this.keyboardMap = {};
+                    this.touchPoints = new Map();
+                    
+                    // MIDI state
+                    this.midiAccess = null;
+                    this.selectedInput = null;
+                    
+                    // Initialize everything
+                    this.initKeyboard();
+                    this.initControls();
+                    this.initMidi();
+                    this.initComputerKeyboard();
+                    
+                    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                }
+                
+                initAudioComponents() {
+                    if (!this.reverb) {
+                        // Create the effects chain
+                        this.reverb = new Tone.Reverb(0.3);
+                        this.volume = new Tone.Volume(-12);
+                        
+                        // Connect reverb to volume, then to destination
+                        this.reverb.connect(this.volume);
+                        this.volume.toDestination();
+                        
+                        // Set initial reverb mix
+                        this.reverb.wet.value = 0.3;
+                    }
+                }
+
+                
+                initKeyboard() {
+                    const keyboard = document.getElementById('keyboard');
+                    keyboard.innerHTML = '';
+                    
+                    const whiteKeys = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+                    const blackKeys = ['C#', 'D#', '', 'F#', 'G#', 'A#', ''];
+                    
+                    // Create 3 octaves (C3 to C6)
+                    for (let octave = 3; octave <= 5; octave++) {
+                        for (let i = 0; i < 7; i++) {
+                            // White key
+                            const whiteKey = document.createElement('div');
+                            whiteKey.className = 'white-key';
+                            whiteKey.dataset.note = whiteKeys[i];
+                            whiteKey.dataset.octave = octave;
+                            whiteKey.dataset.midiNote = this.noteToMidi(whiteKeys[i], octave);
+                            
+                            const noteLabel = document.createElement('div');
+                            noteLabel.className = 'keyboard-note';
+                            noteLabel.textContent = whiteKeys[i] + octave;
+                            whiteKey.appendChild(noteLabel);
+                            
+                            this.addKeyEventListeners(whiteKey);
+                            keyboard.appendChild(whiteKey);
+                            
+                            // Black key
+                            if (blackKeys[i]) {
+                                const blackKey = document.createElement('div');
+                                blackKey.className = 'black-key';
+                                blackKey.dataset.note = blackKeys[i];
+                                blackKey.dataset.octave = octave;
+                                blackKey.dataset.midiNote = this.noteToMidi(blackKeys[i], octave);
+                                
+                                // Position black key between white keys
+                                const octaveOffset = (octave - 3) * 7;
+                                blackKey.style.left = `${(octaveOffset + i) * 50 + 35}px`;
+                                
+                                const blackNoteLabel = document.createElement('div');
+                                blackNoteLabel.className = 'keyboard-note';
+                                blackNoteLabel.textContent = blackKeys[i] + octave;
+                                blackKey.appendChild(blackNoteLabel);
+                                
+                                this.addKeyEventListeners(blackKey);
+                                keyboard.appendChild(blackKey);
+                            }
+                        }
+                    }
+                    
+                    // Global event listeners
+                    document.addEventListener('mouseup', () => this.releaseAllNotes());
+                    document.addEventListener('mouseleave', () => this.releaseAllNotes());
+                    window.addEventListener('blur', () => this.releaseAllNotes());
+                }
+                
+                addKeyEventListeners(keyElement) {
+                    // Mouse events
+                    keyElement.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        if (!this.audioStarted) return;
+                        this.playNoteFromElement(e.target);
+                    });
+                    
+                    // Touch events
+                    keyElement.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        if (!this.audioStarted) return;
+                        const touch = e.changedTouches[0];
+                        this.touchPoints.set(touch.identifier, e.target);
+                        this.playNoteFromElement(e.target);
+                    }, { passive: false });
+                    
+                    keyElement.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        const touch = e.changedTouches[0];
+                        const element = this.touchPoints.get(touch.identifier);
+                        if (element) {
+                            this.releaseNoteFromElement(element);
+                            this.touchPoints.delete(touch.identifier);
+                        }
+                    }, { passive: false });
+                    
+                    keyElement.addEventListener('touchcancel', (e) => {
+                        e.preventDefault();
+                        const touch = e.changedTouches[0];
+                        const element = this.touchPoints.get(touch.identifier);
+                        if (element) {
+                            this.releaseNoteFromElement(element);
+                            this.touchPoints.delete(touch.identifier);
+                        }
+                    }, { passive: false });
+                }
+                
+                noteToMidi(note, octave) {
+                    const noteMap = {
+                        'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 
+                        'F': 5, 'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11
+                    };
+                    return (octave + 1) * 12 + noteMap[note];
+                }
+                
+                midiToFrequency(midiNote) {
+                    return 440 * Math.pow(2, (midiNote - 69) / 12);
+                }
+                
+                midiToNoteString(midiNote) {
+                    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                    const octave = Math.floor(midiNote / 12) - 1;
+                    const noteName = noteNames[midiNote % 12];
+                    return noteName + octave;
+                }
+                
+                playNoteFromElement(element) {
+                    if (!element?.dataset.midiNote || !this.audioStarted) return;
+                    
+                    const midiNote = parseInt(element.dataset.midiNote);
+                    this.playNote(midiNote);
+                    
+                    element.classList.add('active');
+                    this.activeNotes.add(element);
+                    
+                    if (this.isMobile) {
+                        element._releaseTimer = setTimeout(() => {
+                            this.releaseNoteFromElement(element);
+                        }, this.sustainTime * 1000);
+                    }
+                }
+                
+                releaseNoteFromElement(element) {
+                    if (!element?.dataset.midiNote) return;
+                    
+                    const midiNote = parseInt(element.dataset.midiNote);
+                    this.releaseNote(midiNote);
+                    
+                    element.classList.remove('active');
+                    this.activeNotes.delete(element);
+                    
+                    if (element._releaseTimer) {
+                        clearTimeout(element._releaseTimer);
+                        delete element._releaseTimer;
+                    }
+                }
+                
+                playNote(midiNote, velocity = 0.7) {
+                    // Initialize audio components on first use
+                    if (!this.synth) {
+                        this.initAudioComponents();
+                        this.initInstrument();
+                    }
+                    
+                    if (!this.synth) return;
+                    
+                    try {
+                        const noteString = this.midiToNoteString(midiNote);
+                        this.synth.triggerAttack(noteString, Tone.now(), velocity);
+                    } catch (error) {
+                        console.error('Error playing note:', error);
+                    }
+                }
+                
+                releaseNote(midiNote) {
+                    if (!this.synth) return;
+                    
+                    try {
+                        const noteString = this.midiToNoteString(midiNote);
+                        this.synth.triggerRelease(noteString, Tone.now());
+                    } catch (error) {
+                        console.error('Error releasing note:', error);
+                    }
+                }
+                
+                releaseAllNotes() {
+                    if (this.synth && audioStarted) {
+                        this.synth.releaseAll();
+                    }
+                    
+                    this.activeNotes.forEach(element => {
+                        element.classList.remove('active');
+                        if (element._releaseTimer) {
+                            clearTimeout(element._releaseTimer);
+                            delete element._releaseTimer;
+                        }
+                    });
+                    this.activeNotes.clear();
+                    this.touchPoints.clear();
+                }
+                
+                initInstrument() {
+                    this.releaseAllNotes();
+                    
+                    // Ensure audio components are initialized
+                    if (!this.reverb) {
+                        this.initAudioComponents();
+                    }
+                    
+                    let synthConstructor;
+                    switch(this.currentInstrument) {
+                        case 'am': synthConstructor = Tone.AMSynth; break;
+                        case 'fm': synthConstructor = Tone.FMSynth; break;
+                        case 'duo': synthConstructor = Tone.DuoSynth; break;
+                        case 'membrane': synthConstructor = Tone.MembraneSynth; break;
+                        case 'metal': synthConstructor = Tone.MetalSynth; break;
+                        case 'pluck': synthConstructor = Tone.PluckSynth; break;
+                        default: synthConstructor = Tone.Synth; break;
+                    }
+                    
+                    // Create new synth and connect it to the reverb input
+                    this.synth = new Tone.PolySynth(synthConstructor, {
+                        maxPolyphony: this.polyphony,
+                        volume: -6,
+                        envelope: {
+                            attack: 0.005,
+                            decay: 0.1,
+                            sustain: 0.3,
+                            release: this.sustainTime
+                        }
+                    }).connect(this.reverb); // Connect synth directly to reverb input
+
+                    this.synth.triggerAttackRelease("C4", "32n", Tone.now(), 0);
+                }
+                
+                async initMidi() {
+                    const statusIndicator = document.getElementById('status-indicator');
+                    const statusText = document.getElementById('status-text');
+                    
+                    if (!navigator.requestMIDIAccess) {
+                        statusIndicator.className = 'status-indicator status-disconnected';
+                        statusText.textContent = 'MIDI API not supported';
+                        return;
+                    }
+                    
+                    try {
+                        this.midiAccess = await navigator.requestMIDIAccess({ sysex: false });
+                        statusIndicator.className = 'status-indicator status-connected';
+                        statusText.textContent = 'MIDI API connected';
+                        
+                        this.midiAccess.onstatechange = () => this.updateMidiDevices();
+                        this.updateMidiDevices();
+                        
+                    } catch (error) {
+                        console.error('MIDI error:', error);
+                        statusIndicator.className = 'status-indicator status-disconnected';
+                        statusText.textContent = 'MIDI access failed';
+                    }
+                }
+                
+                updateMidiDevices() {
+                    const container = document.getElementById('midi-devices');
+                    if (!this.midiAccess) {
+                        container.innerHTML = '<p>MIDI not available</p>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    let count = 0;
+                    
+                    for (let input of this.midiAccess.inputs.values()) {
+                        count++;
+                        const active = this.selectedInput?.id === input.id;
+                        html += `<div class="device-item ${active ? 'active' : ''}" data-id="${input.id}" data-type="input">
+                            <i class="fas fa-keyboard"></i> ${input.name || 'Unnamed Device'} (IN)
+                            ${active ? '<i class="fas fa-check" style="float:right"></i>' : ''}
+                        </div>`;
+                    }
+                    
+                    container.innerHTML = count ? 
+                        `<p>Found ${count} input device(s):</p>${html}` : 
+                        '<p>No MIDI input devices found</p>';
+                    
+                    container.querySelectorAll('.device-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            this.selectMidiDevice(item.dataset.id);
+                        });
+                    });
+                }
+                
+                selectMidiDevice(deviceId) {
+                    if (this.selectedInput) {
+                        this.selectedInput.onmidimessage = null;
+                    }
+                    
+                    for (let input of this.midiAccess.inputs.values()) {
+                        if (input.id === deviceId) {
+                            this.selectedInput = input;
+                            this.selectedInput.onmidimessage = (e) => this.handleMidiMessage(e);
+                            this.updateMidiDevices();
+                            document.getElementById('status-text').textContent = 
+                                `Connected: ${input.name || 'Unknown'}`;
+                            break;
+                        }
+                    }
+                }
+                
+                handleMidiMessage(message) {
+                    const [command, note, velocity] = message.data;
+                    const type = command & 0xF0;
+                    
+                    if (type === 0x90 || type === 0x80) {
+                        if (type === 0x90 && velocity > 0) {
+                            this.playNote(note, velocity / 127);
+                            this.highlightKeyboardNote(note, true);
+                        } else {
+                            this.releaseNote(note);
+                            this.highlightKeyboardNote(note, false);
+                        }
+                    }
+                }
+                
+                highlightKeyboardNote(midiNote, activate) {
+                    const element = document.querySelector(`[data-midi-note="${midiNote}"]`);
+                    if (element) {
+                        element.classList.toggle('active', activate);
+                        if (activate) {
+                            this.activeNotes.add(element);
+                        } else {
+                            this.activeNotes.delete(element);
+                        }
+                    }
+                }
+                
+                initControls() {
+                    // Instrument select
+                    document.getElementById('instrument-select').addEventListener('change', (e) => {
+                        this.currentInstrument = e.target.value;
+                        this.initInstrument();
+                    });
+                    
+                    // Volume slider
+                    document.getElementById('volume-slider').addEventListener('input', (e) => {
+                        if (!this.volume) {
+                            this.initAudioComponents(); // Initialize if not already done
+                        }
+                        this.volume.volume.value = e.target.value;
+                        document.getElementById('volume-value').textContent = e.target.value;
+                    });
+                    
+                    // Reverb slider
+                    document.getElementById('reverb-slider').addEventListener('input', (e) => {
+                        if (!this.reverb) {
+                            this.initAudioComponents(); // Initialize if not already done
+                        }
+                        this.reverb.wet.value = e.target.value;
+                        document.getElementById('reverb-value').textContent = e.target.value;
+                    });
+                    
+                    // Sustain slider
+                    document.getElementById('sustain-slider').addEventListener('input', (e) => {
+                        this.sustainTime = parseFloat(e.target.value);
+                        document.getElementById('sustain-value').textContent = this.sustainTime;
+                        this.initInstrument();
+                    });
+                    
+                    // Connect MIDI button
+                    document.getElementById('connect-midi').addEventListener('click', () => {
+                        this.initMidi();
+                    });
+                    
+                    // Test sound button
+                    document.getElementById('test-sound').addEventListener('click', () => {
+                        if (!this.audioStarted) return;
+                        this.playTestSound();
+                    });
+                    
+                    // Octave controls
+                    document.getElementById('octave-up').addEventListener('click', () => {
+                        if (this.octave < 6) this.octave++;
+                        document.getElementById('octave-value').textContent = this.octave;
+                    });
+                    
+                    document.getElementById('octave-down').addEventListener('click', () => {
+                        if (this.octave > 2) this.octave--;
+                        document.getElementById('octave-value').textContent = this.octave;
+                    });
+                }
+                
+                initComputerKeyboard() {
+                    this.keyboardMap = {
+                        'KeyA': { note: 'C', octaveOffset: 0 },
+                        'KeyW': { note: 'C#', octaveOffset: 0 },
+                        'KeyS': { note: 'D', octaveOffset: 0 },
+                        'KeyE': { note: 'D#', octaveOffset: 0 },
+                        'KeyD': { note: 'E', octaveOffset: 0 },
+                        'KeyF': { note: 'F', octaveOffset: 0 },
+                        'KeyT': { note: 'F#', octaveOffset: 0 },
+                        'KeyG': { note: 'G', octaveOffset: 0 },
+                        'KeyY': { note: 'G#', octaveOffset: 0 },
+                        'KeyH': { note: 'A', octaveOffset: 0 },
+                        'KeyU': { note: 'A#', octaveOffset: 0 },
+                        'KeyJ': { note: 'B', octaveOffset: 0 },
+                        'KeyK': { note: 'C', octaveOffset: 1 }
+                    };
+                    
+                    document.addEventListener('keydown', (e) => {
+                        if (e.repeat || !this.audioStarted) return;
+                        
+                        const mapping = this.keyboardMap[e.code];
+                        if (mapping) {
+                            e.preventDefault();
+                            const octave = this.octave + mapping.octaveOffset;
+                            const midiNote = this.noteToMidi(mapping.note, octave);
+                            this.playNote(midiNote);
+                            this.highlightKeyboardNote(midiNote, true);
+                        }
+                    });
+                    
+                    document.addEventListener('keyup', (e) => {
+                        const mapping = this.keyboardMap[e.code];
+                        if (mapping) {
+                            e.preventDefault();
+                            const octave = this.octave + mapping.octaveOffset;
+                            const midiNote = this.noteToMidi(mapping.note, octave);
+                            this.releaseNote(midiNote);
+                            this.highlightKeyboardNote(midiNote, false);
+                        }
+                    });
+                }
+                
+                playTestSound() {
+                    if (!this.synth || !this.audioStarted) return;
+                    
+                    this.releaseAllNotes();
+                    
+                    const chord = ['C', 'E', 'G'].map(note => this.noteToMidi(note, this.octave));
+                    
+                    chord.forEach(note => {
+                        this.playNote(note, 0.5);
+                        this.highlightKeyboardNote(note, true);
+                    });
+                    
+                    setTimeout(() => {
+                        chord.forEach(note => {
+                            this.releaseNote(note);
+                            this.highlightKeyboardNote(note, false);
+                        });
+                    }, 1000);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
