@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #6a11cb;
+      }
+
+      .cls-1, .cls-2 {
+        opacity: .9;
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4 {
+        isolation: isolate;
+      }
+
+      .cls-5 {
+        fill: #fc0;
+      }
+
+      .cls-2, .cls-6 {
+        fill: #2575fc;
+      }
+
+      .cls-3 {
+        fill: url(#Gradiente_sem_nome_2);
+      }
+
+      .cls-3, .cls-4 {
+        opacity: .8;
+      }
+
+      .cls-7 {
+        fill: #f90;
+      }
+
+      .cls-8 {
+        fill: #16213e;
+      }
+
+      .cls-9 {
+        fill: #fff;
+      }
+
+      .cls-10 {
+        fill: #f8f8f8;
+      }
+
+      .cls-4 {
+        fill: url(#Gradiente_sem_nome);
+      }
+
+      .cls-11 {
+        fill: #333;
+      }
+    </style>
+    <linearGradient id="Gradiente_sem_nome" data-name="Gradiente sem nome" x1="236" y1="302" x2="276" y2="110" gradientTransform="translate(0 512) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fc0"/>
+      <stop offset="1" stop-color="#f90"/>
+    </linearGradient>
+    <linearGradient id="Gradiente_sem_nome_2" data-name="Gradiente sem nome 2" x1="326" y1="302" x2="350" y2="182" gradientTransform="translate(0 512) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f60"/>
+      <stop offset="1" stop-color="#c30"/>
+    </linearGradient>
+  </defs>
+  <rect class="cls-8" width="512" height="512"/>
+  <g>
+    <rect class="cls-9" x="100" y="210" width="312" height="192" rx="10" ry="10"/>
+    <rect class="cls-10" x="116" y="210" width="40" height="192"/>
+    <rect class="cls-10" x="176" y="210" width="40" height="192"/>
+    <rect class="cls-10" x="236" y="210" width="40" height="192"/>
+    <rect class="cls-10" x="296" y="210" width="40" height="192"/>
+    <rect class="cls-10" x="356" y="210" width="40" height="192"/>
+    <rect class="cls-11" x="146" y="210" width="24" height="120"/>
+    <rect class="cls-11" x="206" y="210" width="24" height="120"/>
+    <rect class="cls-11" x="326" y="210" width="24" height="120"/>
+    <rect class="cls-11" x="386" y="210" width="24" height="120"/>
+    <rect class="cls-4" x="236" y="210" width="40" height="192"/>
+    <rect class="cls-3" x="326" y="210" width="24" height="120"/>
+    <path class="cls-2" d="M256,170c-20,0-40,10-40,30v20c0,20,20,30,40,30s40-10,40-30v-20c0-20-20-30-40-30Z"/>
+    <path class="cls-1" d="M216,130c-20,0-40,10-40,30v20c0,20,20,30,40,30s40-10,40-30v-20c0-20-20-30-40-30Z"/>
+    <path class="cls-1" d="M296,130c20,0,40,10,40,30v20c0,20-20,30-40,30s-40-10-40-30v-20c0-20,20-30,40-30Z"/>
+    <circle class="cls-5" cx="140" cy="150" r="12"/>
+    <circle class="cls-7" cx="180" cy="140" r="10"/>
+    <circle class="cls-6" cx="370" cy="160" r="14"/>
+    <path class="cls-9" d="M256,110c-10,0-20,5-20,15s10,15,20,15,20-5,20-15-10-15-20-15Z"/>
+    <rect class="cls-9" x="246" y="130" width="20" height="40"/>
+  </g>
+</svg>
