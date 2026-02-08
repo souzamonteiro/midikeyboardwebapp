@@ -1,0 +1,68 @@
+.
+├── LICENSE
+├── README.md
+├── create_certs.sh
+├── generate-certs.sh
+├── generate-icons.sh
+├── icons
+│   ├── apple-touch-icon.png
+│   ├── favicon-16.png
+│   ├── favicon-32.png
+│   ├── favicon.ico
+│   ├── icon-128x128.png
+│   ├── icon-144x144.png
+│   ├── icon-152x152.png
+│   ├── icon-16x16.png
+│   ├── icon-180x180.png
+│   ├── icon-192x192.png
+│   ├── icon-32x32.png
+│   ├── icon-384x384.png
+│   ├── icon-512x512.png
+│   ├── icon-72x72.png
+│   ├── icon-96x96.png
+│   └── icon.svg
+├── install_mkcert.sh
+├── tree.txt
+└── www
+    ├── css
+    │   └── fontawesome.min.css
+    ├── icons
+    │   ├── apple-touch-icon.png
+    │   ├── favicon-16.png
+    │   ├── favicon-32.png
+    │   ├── favicon.ico
+    │   ├── icon-128x128.png
+    │   ├── icon-144x144.png
+    │   ├── icon-152x152.png
+    │   ├── icon-16x16.png
+    │   ├── icon-180x180.png
+    │   ├── icon-192x192.png
+    │   ├── icon-32x32.png
+    │   ├── icon-384x384.png
+    │   ├── icon-512x512.png
+    │   ├── icon-72x72.png
+    │   ├── icon-96x96.png
+    │   └── icon.svg
+    ├── index.html
+    ├── js
+    │   └── Tone.js
+    ├── manifest.json
+    ├── sw.js
+    └── webfonts
+        ├── fa-brands-400.eot
+        ├── fa-brands-400.svg
+        ├── fa-brands-400.ttf
+        ├── fa-brands-400.woff
+        ├── fa-brands-400.woff2
+        ├── fa-regular-400.eot
+        ├── fa-regular-400.svg
+        ├── fa-regular-400.ttf
+        ├── fa-regular-400.woff
+        ├── fa-regular-400.woff2
+        ├── fa-solid-900.eot
+        ├── fa-solid-900.svg
+        ├── fa-solid-900.ttf
+        ├── fa-solid-900.woff
+        └── fa-solid-900.woff2
+
+7 directories, 59 files
